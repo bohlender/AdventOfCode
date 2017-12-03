@@ -14,9 +14,8 @@ void main(string[] args) {
         uint input;
         contents.formattedRead("%d",input);
         auto res1 = distance(input);
-        //auto res2 = checksum2(input);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = calcUntilOver(input);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -53,9 +52,6 @@ unittest{
 
 // Computes numbers in cardinal directions of ring
 uint[] cardinalDirNums(uint ring){
-    if(ring == 1)
-        return [1];
-
     const borderLength = ring*2-1;
     const eastNum = (2*(ring-1)-1)^^2 + borderLength/2;
 
@@ -66,15 +62,12 @@ uint[] cardinalDirNums(uint ring){
 }
 
 unittest{
-    expect([1], cardinalDirNums(1));
     expect([2,4,6,8], cardinalDirNums(2));
     expect([11,15,19,23], cardinalDirNums(3));
 }
 
 /// Computes manhattan distance from number n to 1 (on ring 1)
 uint distance(uint n){
-    assert(n>0);
-
     const r = ring(n);
     const distToNESW = r.cardinalDirNums.map!(num => abs(n-num)).reduce!min;
     const distFromNESW = r-1;
@@ -87,4 +80,82 @@ unittest{
     expect(3, distance(12));
     expect(2, distance(23));
     expect(31, distance(1024));
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+// Notes:
+// - Horizontal & vertical distances from puzzle 1 could be used as coordinates
+import std.typecons;
+import std.algorithm: max, minIndex;
+import std.range: repeat, chain, take;
+
+struct Vec2D{
+    int x;
+    int y;
+
+    this(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+
+    Vec2D opBinary(string op)(Vec2D rhs) if(op == "+") {
+        return Vec2D(this.x + rhs.x, this.y + rhs.y);
+    }
+
+    string toString() const {
+        return format("(%d, %d)", x, y);
+    }
+
+    Vec2D[] neighbours() const {
+        Vec2D[] res;
+        for(int x=-1; x<=1; ++x){
+            for(int y=-1; y<=1; ++y){
+                if(this.x != x || this.y != y)
+                    res ~= Vec2D(this.x + x, this.y + y);
+            }
+        }
+        return res;
+    }
+}
+
+auto movesForRing(uint ring){
+    assert(ring>1);
+
+    auto r = Vec2D(1,0).repeat;
+    auto u = Vec2D(0,1).repeat;
+    auto l = Vec2D(-1,0).repeat;
+    auto d = Vec2D(0,-1).repeat;
+
+    const borderLength = ring*2-1;
+    return chain(r.take(1), u.take(borderLength-2), l.take(borderLength-1), d.take(borderLength-1), r.take(borderLength-1));
+}
+
+auto calcUntilOver(uint limit){
+    uint[Vec2D] mem;
+    mem[Vec2D(0,0)] = 1;
+
+    auto cur = Vec2D(0,0);
+    uint bound;
+    for(uint ring = 2; ; ++ring){
+        foreach(move; movesForRing(ring)){
+            cur = cur + move;
+            uint sum;
+            foreach(n; cur.neighbours){
+                const p = n in mem;
+                if(p)
+                    sum += *p;
+            }
+            mem[cur] = sum;
+            if(mem[cur] > limit)
+                return mem[cur];
+        }
+    }
+
+    return mem[cur]; // unreachable
+}
+
+unittest{
+    expect(25, calcUntilOver(23));
 }
