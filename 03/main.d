@@ -89,7 +89,7 @@ unittest{
 // - Horizontal & vertical distances from puzzle 1 could be used as coordinates
 import std.typecons;
 import std.algorithm: max, minIndex;
-import std.range: repeat, chain, take;
+import std.range: repeat, chain, take, generate;
 
 struct Vec2D{
     int x;
@@ -104,10 +104,6 @@ struct Vec2D{
         return Vec2D(this.x + rhs.x, this.y + rhs.y);
     }
 
-    string toString() const {
-        return format("(%d, %d)", x, y);
-    }
-
     Vec2D[] neighbours() const {
         Vec2D[] res;
         for(int x=-1; x<=1; ++x){
@@ -118,6 +114,20 @@ struct Vec2D{
         }
         return res;
     }
+}
+
+auto infiniteMoves(uint startRing = 2){
+    uint curRing = startRing;
+    auto r = movesForRing(curRing);
+    
+    return (){
+        if(r.empty)
+            r = movesForRing(++curRing);
+
+        auto res = r.front;
+        r.popFront;
+        return res;
+    };
 }
 
 auto movesForRing(uint ring){
@@ -137,23 +147,17 @@ auto calcUntilOver(uint limit){
     mem[Vec2D(0,0)] = 1;
 
     auto cur = Vec2D(0,0);
-    uint bound;
-    for(uint ring = 2; ; ++ring){
-        foreach(move; movesForRing(ring)){
-            cur = cur + move;
-            uint sum;
-            foreach(n; cur.neighbours){
-                const p = n in mem;
-                if(p)
-                    sum += *p;
-            }
-            mem[cur] = sum;
-            if(mem[cur] > limit)
-                return mem[cur];
+    auto moves = generate(infiniteMoves());
+    for(auto move = moves.front; mem[cur] <= limit; moves.popFront, move = moves.front){
+        cur = cur + move;
+        uint sum;
+        foreach(n; cur.neighbours){
+            const p = n in mem;
+            if(p) sum += *p;
         }
+        mem[cur] = sum;
     }
-
-    return mem[cur]; // unreachable
+    return mem[cur];
 }
 
 unittest{
