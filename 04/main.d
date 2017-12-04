@@ -1,6 +1,6 @@
 import std.stdio: writeln, writefln;
 import std.file: readText;
-import std.format: format, formattedRead;
+import std.format: formattedRead;
 
 void main(string[] args) {
     if(args.length != 2){
@@ -13,8 +13,12 @@ void main(string[] args) {
     }
 }
 
-static void expect(T1, T2)(T1 expected, T2 actual) if(is(typeof(expected == actual) == bool)) {
-    assert(expected == actual, format("Expected %s but got %s", expected, actual));
+static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in size_t line = __LINE__) if(is(typeof(expected == actual) == bool)) {
+    import std.format: format;
+    import core.exception: AssertError;
+
+    if(!(expected == actual))
+        throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
 }
 
 //============================================================================
