@@ -1,8 +1,9 @@
 import std.stdio: writeln, writefln;
 import std.file: readText, write;
-import std.algorithm: startsWith, find, count, reduce, min, map;
+import std.algorithm: startsWith, find, count, reduce, min, max;
 import std.format: format, formattedRead;
-import std.array: array;
+import std.array: array, appender;
+import std.container: redBlackTree;
 
 void main(string[] args) {
     if(args.length != 2){
@@ -49,7 +50,12 @@ static uint collisionCount(string input){
         bots ~= pos;
     }
 
-    uint numCollisions;    
+    // Track visited locations
+    int maxX, maxY;
+    auto visited = redBlackTree!Vec2D;
+    visited.insert(bots);
+
+    uint numCollisions;
     // Process moves
     while(input.length>0){
         // Bots move simultaneously 
@@ -61,12 +67,28 @@ static uint collisionCount(string input){
 
             // Move bot
             bot = bot + move;
+
+            // Track location
+            maxX = max(maxX, bot.x);
+            maxY = max(maxY, bot.y);
         }
         
         // Only count collision if all bots are at the same location
         const collision = bots.count(bots[0]) == bots.length;
-        if(collision)
+        if(collision){
             ++numCollisions;
+            visited.insert(bots[0]);
+        }
     }
+
+    // Print results
+    auto strBldr = appender!string;
+    strBldr.put("P1\n"); // black & white
+    strBldr.put("%d %d\n".format(maxX, maxY));
+    for(auto y=0; y<=maxY; ++y)
+        for(auto x=0; x<maxX; ++x)
+            strBldr.put("%d ".format(Vec2D(x,y) in visited));
+    "hidden_message.pbm".write(strBldr.data);
+
     return numCollisions;
 }
