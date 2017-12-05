@@ -12,15 +12,18 @@ void main(string[] args) {
     }else{
         auto contents = readText(args[1]);
         auto input = contents.splitLines.map!(to!int).array;
-        auto res1 = stepsUnitOOB(input);
-        //auto res2 = calcUntilOver(input);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res1 = stepsUntilOOB(input, offsetUpdate1);
+        auto res2 = stepsUntilOOB(input, offsetUpdate2);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
-void expect(T1, T2)(T1 expected, T2 actual) if(is(typeof(expected == actual) == bool)) {
-    assert(expected == actual, format("Expected %s but got %s", expected, actual));
+static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in size_t line = __LINE__) if(is(typeof(expected == actual) == bool)) {
+    import std.format: format;
+    import core.exception: AssertError;
+
+    if(!(expected == actual))
+        throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
 }
 
 //============================================================================
@@ -36,10 +39,10 @@ class State{
         return pc >= 0 && pc < jumps.length;
     }
 
-    void step(){
+    void step(int function(in int oldOffset) offsetUpdate = offsetUpdate1){
         auto oldPc = pc;
         pc = jumps[pc]+pc;
-        jumps[oldPc] += 1;
+        jumps[oldPc] = offsetUpdate(jumps[oldPc]);
     }
 protected:
     int pc;
@@ -70,15 +73,32 @@ unittest{
     expect([2,5,0,1,-2], init.jumps);
 }
 
-uint stepsUnitOOB(in int[] jumps){
+uint stepsUntilOOB(in int[] jumps, int function(in int oldOffset) offsetUpdate){
     auto init = new State(0, jumps);
 
     uint c;
     for(c=0; init.pcInBounds; ++c)
-        init.step;
+        init.step(offsetUpdate);
     return c;
 }
 
+static auto offsetUpdate1 = (const(int) offset) => offset+1;
+
 unittest{
-    expect(5, stepsUnitOOB([0,3,0,1,-3]));
+    expect(5, stepsUntilOOB([0,3,0,1,-3], offset => offset+1));
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+static auto offsetUpdate2 = (const(int) offset) => offset>=3 ? offset-1 : offset+1;
+
+unittest{
+    auto init = new State(0,[0,3,0,1,-3]);
+    foreach(i; 0..10)
+        init.step(offsetUpdate2);
+    expect(false, init.pcInBounds);
+    expect([2,3,2,3,-1], init.jumps);
+
+    expect(10, stepsUntilOOB([0,3,0,1,-3], offsetUpdate2));
 }
