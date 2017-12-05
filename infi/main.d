@@ -53,7 +53,6 @@ static uint collisionCount(string input){
     // Track visited locations
     int maxX, maxY;
     auto visited = redBlackTree!Vec2D;
-    visited.insert(bots);
 
     uint numCollisions;
     // Process moves
