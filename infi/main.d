@@ -1,7 +1,8 @@
 import std.stdio: writeln, writefln;
 import std.file: readText;
-import std.algorithm: startsWith, find;
+import std.algorithm: startsWith, find, count;
 import std.format: format, formattedRead;
+import std.array: array;
 
 void main(string[] args) {
     if(args.length != 2){
@@ -55,7 +56,7 @@ uint collisionCount(string input){
         
         // Move bot
         const succ = bots[curBot] + move;
-        const collision = (bots.find(succ).length != 0);
+        const collision = bots.count(succ) == bots.length-1;
         //writefln("Robot %s moves with %s\tfrom %s\tto %s\t(%s)", curBot+1, move, bots[curBot], succ, !collision);
         bots[curBot] = succ;
         if(collision)
