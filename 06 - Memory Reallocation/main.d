@@ -6,6 +6,7 @@ import std.algorithm: map, maxIndex;
 import std.conv: to;
 import std.array: array;
 import std.container: redBlackTree;
+import std.typecons: Tuple;
 
 void main(string[] args) {
     if(args.length != 2){
@@ -13,10 +14,9 @@ void main(string[] args) {
     }else{
         auto contents = readText(args[1]);
         auto input = contents.split.map!(to!uint).array;
-        auto res1 = cyclesUntilRecurrence(input);
-        //auto res2 = stepsUntilOOB(input, offsetUpdate2);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res1 = cyclesUntilRecurrence(input).count;
+        auto res2 = cyclesInLoop(input);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -31,7 +31,9 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
 //============================================================================
 // Puzzle 1
 //============================================================================
-uint cyclesUntilRecurrence(in uint[] banks){
+alias Res = Tuple!(uint,"count", uint[], "banks");
+
+Res cyclesUntilRecurrence(in uint[] banks){
     auto curBanks = banks.dup;
     auto visited = redBlackTree!(uint[]);
     
@@ -51,9 +53,21 @@ uint cyclesUntilRecurrence(in uint[] banks){
         for(auto idx=maxIdx+1; numBlocks>0; ++idx, --numBlocks)
             curBanks[idx % $] += 1;
     }
-    return cycles;
+    return Res(cycles, curBanks);
 }
 
 unittest{
-    expect(5,cyclesUntilRecurrence([0,2,7,0]));
+    expect(5,cyclesUntilRecurrence([0,2,7,0]).count);
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+uint cyclesInLoop(in uint[] banks){
+    auto r = cyclesUntilRecurrence(banks);
+    return cyclesUntilRecurrence(r.banks).count;
+}
+
+unittest{
+    expect(4,cyclesInLoop([0,2,7,0]));
 }
