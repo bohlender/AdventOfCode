@@ -4,14 +4,15 @@ import std.format: format, formattedRead;
 import std.string: split, splitLines;
 import std.algorithm: startsWith, find;
 import std.conv: to;
+import std.typecons: Tuple;
 
 void main(string[] args) {
     if(args.length != 2){
         writeln("Invalid number of parameters. Expecting one input file.");
     }else{
         auto contents = readText(args[1]);
-        auto input = contents.splitLines;
-        auto res1 = getBottomProg(input);
+        auto input = parse(contents);
+        auto res1 = findRoot(input);
         //auto res2 = cyclesInLoop(input);
         //writefln("First: %s\nSecond: %s", res1, res2);
         writeln(res1);
@@ -29,48 +30,36 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
 //============================================================================
 // Puzzle 1
 //============================================================================
-struct Node{
-    const string src;
-    const uint weight;
-    const string[] dsts;
+alias Node = Tuple!(string, "src", uint, "weight", string[], "dsts");
 
-    this(in string src, in uint weight, in string[] dsts){
-        this.src = src;
-        this.weight = weight;
-        this.dsts = dsts;
+static Node[string] parse(in string s){
+    Node[string] res;
+    foreach(line; s.splitLines){
+        Node n;
+        line.formattedRead("%s (%d)", n.src, n.weight);
+        if(line.startsWith(" ->"))
+            line.formattedRead(" -> %(%(%c%), %)", n.dsts);
+        res[n.src] = n;
     }
-
-    this(in string s){
-        string src;
-        uint weight;
-        string[] dsts;
-
-        auto cp = s.dup;
-        cp.formattedRead("%s (%d)", src, weight);
-        if(cp.startsWith(" ->"))
-            cp.formattedRead(" -> %(%(%c%), %)", dsts);
-        this(src, weight, dsts);
-    }
+    return res;
 }
 
 unittest{
-    expect("fwft (72)".to!Node, Node("fwft", 72, []));
-    expect("fwft (72) -> ktlj, cntj, xhth".to!Node, Node("fwft", 72, ["ktlj","cntj","xhth"]));
+    expect(Node("fwft", 72, []),                     parse("fwft (72)")["fwft"]);
+    expect(Node("fwft", 72, ["ktlj","cntj","xhth"]), parse("fwft (72) -> ktlj, cntj, xhth")["fwft"]);
 }
 
-string getBottomProg(in string[] lines) {
+static string findRoot(in Node[string] nodes) {
     // Collect dependencies
-    string[string] heldBy;
-    foreach(line; lines){
-        const n = line.to!Node;
-        foreach(dst; n.dsts)
-            heldBy[dst] = n.src;
-    }
+    string[string] parentOf;
+    foreach(parent; nodes.byValue)
+        foreach(child; parent.dsts)
+            parentOf[child] = parent.src;
 
     // Find element not held by any other
-    // Naive: return heldBy.byValue.find!(s => s !in heldBy).front
+    // Naive: return parentOf.byValue.find!(s => s !in parentOf).front;
     string cur;
-    for(cur = heldBy.byKey.front; cur in heldBy; cur = heldBy[cur]){}
+    for(cur = parentOf.byKey.front; cur in parentOf; cur = parentOf[cur]){}
     return cur;
 }
 
@@ -89,5 +78,9 @@ ugml (68) -> gyxo, ebii, jptl
 gyxo (61)
 cntj (57)";
 
-    expect("tknk", getBottomProg(input.splitLines));
+    expect("tknk", input.parse.findRoot);
 }
+
+//============================================================================
+// Puzzle 2
+//============================================================================
