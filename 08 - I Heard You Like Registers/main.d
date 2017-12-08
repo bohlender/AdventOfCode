@@ -14,9 +14,8 @@ void main(string[] args) {
         auto contents = readText(args[1]);
         auto input = contents.splitLines.map!(parseInstr).array;
         auto res1 = maxRegAtEnd(input);
-        //auto res2 = cyclesInLoop(input);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = maxRegTillEnd(input);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -63,30 +62,48 @@ static bool eval(in State s, in string condition){
     }
 }
 
-unittest{
-    State s = ["a":1, "b":-2];
-    expect(false, eval(s, "a == b"));
-    expect(true, eval(s, "x > b"));
-}
-
 static void step(ref State s, in Instr instr){
     if(s.eval(instr.cond)){
         s[instr.reg] = s.get(instr.reg, 0) + (instr.inc ? instr.val : -instr.val);
     }
 }
 
-static uint maxRegAtEnd(in Instr[] prog){
+static int maxRegAtEnd(in Instr[] prog){
     State s;
     foreach(instr; prog)
         s.step(instr);
     return max(0, s.byValue.maxElement);
 }
 
+//============================================================================
+// Puzzle 2
+//============================================================================
+static int maxRegTillEnd(in Instr[] prog){
+    State s;
+    int maxReg = 0;
+    foreach(instr; prog){
+        s.step(instr);
+        if(s.length > 0)
+            maxReg = max(maxReg, s.byValue.maxElement);
+    }
+    return maxReg;
+}
+
+//============================================================================
+// Unittests
+//============================================================================
 unittest{
-    auto contents = r"b inc 5 if a > 1
+    State s = ["a":1, "b":-2];
+    expect(false, eval(s, "a == b"));
+    expect(true, eval(s, "x > b"));
+}
+
+unittest{
+    const contents = r"b inc 5 if a > 1
 a inc 1 if b < 5
 c dec -10 if a >= 1
 c inc -20 if c == 10";
-    auto input = contents.splitLines.map!(parseInstr).array;
-    maxRegAtEnd(input);
+    const input = contents.splitLines.map!(parseInstr).array;
+    expect(1, maxRegAtEnd(input));
+    expect(10, maxRegTillEnd(input));
 }
