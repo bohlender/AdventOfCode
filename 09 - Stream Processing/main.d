@@ -10,9 +10,8 @@ void main(string[] args) {
         auto contents = readText(args[1]);
         auto input = contents.splitLines[0];
         auto res1 = score(input);
-        //auto res2 = maxRegTillEnd(input);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = garbage(input);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -45,6 +44,18 @@ static uint score(in string s, in uint groupNesting = 0, in bool inGarbage = fal
 }
 
 //============================================================================
+// Puzzle 2
+//============================================================================
+static uint garbage(in string s, in bool inGarbage = false){
+    if(s == [])     return 0;
+    if(s[0] == '!') return garbage(s[2..$], inGarbage);
+
+    if(inGarbage)
+        return (s[0] != '>') + garbage(s[1..$], s[0] != '>');
+    return garbage(s[1..$], s[0] == '<');
+}
+
+//============================================================================
 // Unittests
 //============================================================================
 unittest{
@@ -56,4 +67,14 @@ unittest{
     expect(9, "{{<ab>},{<ab>},{<ab>},{<ab>}}".score);
     expect(9, "{{<!!>},{<!!>},{<!!>},{<!!>}}".score);
     expect(3, "{{<a!>},{<a!>},{<a!>},{<ab>}}".score);
+}
+
+unittest{
+    expect(0, "<>".garbage);
+    expect(17, "<random characters>".garbage);
+    expect(3, "<<<<>".garbage);
+    expect(2, "<{!>}>".garbage);
+    expect(0, "<!!>".garbage);
+    expect(0, "<!!!>>".garbage);
+    expect(10, `<{o"i!a,<{i<a>`.garbage);
 }
