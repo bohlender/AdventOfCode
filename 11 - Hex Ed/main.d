@@ -13,9 +13,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.strip.split(',').map!parseDir;
         auto res1 = input.distance;
-        //auto res2 = hash(contents);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.maxDistance;
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -70,6 +69,21 @@ static uint distance(Range)(Range dirs){
     
     auto hexPos = fromAxial(curPos);
     return max(hexPos.x.abs, hexPos.y.abs, hexPos.z.abs);
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+static uint maxDistance(Range)(Range dirs){
+    auto curPos = AxialCoord(0,0);
+    uint res = 0;
+    foreach(dir; dirs){
+        curPos = curPos.step(dir);
+        auto hexPos = fromAxial(curPos);
+        auto dist = max(hexPos.x.abs, hexPos.y.abs, hexPos.z.abs);
+        res = max(res, dist);
+    }
+    return res;
 }
 
 //============================================================================
