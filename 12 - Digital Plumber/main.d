@@ -10,9 +10,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.progsInGroupOf(0);
-        //auto res2 = input.maxDistance;
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.countGroups;
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -49,6 +48,10 @@ class EquivClass(T){
     void mergeWith(in EquivClass!T other){ other._elements.each!(e => add(e)); }
 
     auto elements() const @property {return _elements;}
+
+    override string toString() const {
+        return "Representative: %s\nElements: %s (%s)".format(_representative.to!string, _elements.to!string, &_elements);
+    }
 protected:
     T _representative;
     RedBlackTree!T _elements;
@@ -85,6 +88,16 @@ static ulong progsInGroupOf(in Equiv[uint] equivs, in uint n){
 }
 
 //============================================================================
+// Puzzle 2
+//============================================================================
+static ulong countGroups(in Equiv[uint] equivs){
+    auto representatives = redBlackTree!uint;
+    foreach(eqiv; equivs)
+        representatives.insert(eqiv.representative);
+    return representatives.length;
+}
+
+//============================================================================
 // Unittests
 //============================================================================
 unittest{
@@ -97,4 +110,16 @@ unittest{
 6 <-> 4, 5";
     auto equivs = contents.parse;
     expect(6, equivs.progsInGroupOf(0));
+}
+
+unittest{
+    auto contents = r"0 <-> 2
+1 <-> 1
+2 <-> 0, 3, 4
+3 <-> 2, 4
+4 <-> 2, 3, 6
+5 <-> 6
+6 <-> 4, 5";
+    auto equivs = contents.parse;
+    expect(2, equivs.countGroups);
 }
