@@ -1,7 +1,7 @@
 import std.stdio: writeln, writefln;
 import std.file: readText;
 import std.format: format, formattedRead;
-import std.string: strip, split, splitLines;
+import std.string: splitLines;
 
 void main(string[] args) {
     if(args.length != 2){
@@ -9,8 +9,8 @@ void main(string[] args) {
     }else{
         const contents = readText(args[1]);
         auto input = contents.parse;
-        auto res1 = input.progsInGroupOf(0);
-        auto res2 = input.countGroups;
+        auto res1 = new State(input).tripSeverity;
+        auto res2 = input.idealDelay2;
         writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
@@ -26,100 +26,152 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
 //============================================================================
 // Puzzle 1
 //============================================================================
-import std.container: RedBlackTree, redBlackTree;
-import std.algorithm: min, each, map;
-import std.range: chain;
-import std.conv: to;
+import std.array: appender;
+import std.algorithm: maxElement, each;
 
-alias Equiv = EquivClass!uint;
-class EquivClass(T){
-    this(in T element){
-        _elements = redBlackTree!T;
-        add(element);
-    }
-
-    void add(in T element){
-        _representative = _elements.empty ? element : min(_representative, element);
-        _elements.insert(element);
-    }
-    
-    T representative() const @property {return _representative;}
-    bool contains(in T element) const @property {return element in _elements;}
-    void mergeWith(in EquivClass!T other){ other._elements.each!(e => add(e)); }
-
-    auto elements() const @property {return _elements;}
-
-    override string toString() const {
-        return "Representative: %s\nElements: %s (%s)".format(_representative.to!string, _elements.to!string, &_elements);
-    }
-protected:
-    T _representative;
-    RedBlackTree!T _elements;
-}
-
-static Equiv[uint] parse(in string contents){
-    Equiv[uint] res;
-    foreach(line; contents.splitLines){
-        // Parse line
-        uint src;
-        uint[] dsts;
-        line.formattedRead!("%d <-> %(%d, %)")(src, dsts);
-
-        // Get equivalence class of src
-        auto srcEquiv = res.get(src, new Equiv(src));
-        res[src] = srcEquiv;
-
-        // Merge equivalence classes of each dst into src class
-        foreach(dst; dsts){
-            auto dstEquiv = res.get(dst, new Equiv(dst));
-            srcEquiv.mergeWith(dstEquiv);
-            
-            // Update map
-            res[dst] = srcEquiv;
-            foreach(e; dstEquiv.elements)
-                res[e] = srcEquiv;
-        }
+static uint[uint] parse(in string content){
+    uint[uint] res;
+    foreach(line; content.splitLines){
+        uint layer, range;
+        line.formattedRead!("%d: %d")(layer, range);
+        res[layer] = range;
     }
     return res;
 }
 
-static ulong progsInGroupOf(in Equiv[uint] equivs, in uint n){
-    return equivs[n].elements.length;
+class State{
+    uint pos;
+    const(uint[uint]) ranges;
+    uint[uint] scannerPos;
+    bool[uint] scannerMovesDown;
+
+    this(in uint[uint] ranges){
+        // Default init
+        pos = 0;
+        this.ranges = ranges;
+        foreach(k; ranges.byKey){
+            scannerPos[k] = 0;
+            scannerMovesDown[k] = true;
+        }
+    }
+
+    this(in State other){
+        pos = other.pos;
+        ranges = other.ranges;
+        scannerPos = cast(uint[uint])other.scannerPos.dup;
+        scannerMovesDown = cast(bool[uint])other.scannerMovesDown.dup;
+    }
+
+    void delayBy(in uint delay){
+        auto oldPos = pos;
+        foreach(_; 0..delay)
+            step();
+        pos = oldPos;
+    }
+    uint maxLayer() const @property {return ranges.byKey.maxElement;}
+    bool isFinal() const @property {return pos >= maxLayer;}
+    uint severity() const @property {return detected ? pos*ranges[pos] : 0;}
+    bool detected() const @property {return (pos in scannerPos) && (scannerPos[pos] == 0);}
+    void step(){
+        // Move player
+        ++pos;
+
+        // Move scanners
+        foreach(k; scannerPos.byKey){
+            scannerPos[k] = scannerMovesDown[k] ? scannerPos[k]+1 : scannerPos[k]-1;
+            if(scannerMovesDown[k] && scannerPos[k] == ranges[k]-1)
+                scannerMovesDown[k] = false;
+            else if(!scannerMovesDown[k] && scannerPos[k] == 0)
+                scannerMovesDown[k] = true;
+        }
+    }
+
+    override string toString() const{
+        auto strBldr = appender!string;
+        foreach(layer; 0..maxLayer+1){
+            strBldr.put("%d: ".format(layer));
+            foreach(value; 0..ranges.get(layer, 0)) {
+                auto entry = scannerPos[layer] == value ? "S" : " ";
+                auto entryFormat = layer == pos && value == 0 ? "(%s)" : "[%s]";
+                strBldr.put(entryFormat.format(entry));
+            }
+            strBldr.put("\n");
+        }
+        return strBldr.data;
+    }
+}
+
+static uint tripSeverity(in State init){
+    auto s = new State(init);
+    uint severity;
+    while(!s.isFinal){
+        s.step;
+        severity += s.severity;
+    }
+    return severity;
 }
 
 //============================================================================
 // Puzzle 2
 //============================================================================
-static ulong countGroups(in Equiv[uint] equivs){
-    auto representatives = redBlackTree!uint;
-    foreach(eqiv; equivs)
-        representatives.insert(eqiv.representative);
-    return representatives.length;
+static bool tripIsSafe(in State from){
+    auto s = new State(from);
+    if(s.detected)
+        return false;
+
+    while(!s.isFinal){
+        s.step;
+        if(s.detected)
+            return false;
+    }
+    return true;
+}
+
+static uint idealDelay(in uint[uint] ranges){
+    auto s = new State(ranges);
+
+    uint cnt;
+    for(cnt = 0; !s.tripIsSafe; ++cnt){
+        s.delayBy(1);
+        //if(cnt % 10000 == 0) writeln("Delay ",cnt);
+    }
+    return cnt;
+}
+
+import std.typecons: Tuple;
+import std.math: abs;
+import std.algorithm: any;
+
+alias ProblemPair = Tuple!(uint, "divisor", uint, "remainder");
+static uint idealDelay2(in uint[uint] ranges){
+    ProblemPair[] problemPairs;
+    foreach(layer, range; ranges){
+        auto divisor = 2*(range-1);
+        auto remainder = abs(divisor-layer)%divisor;
+        writeln(divisor, " ", remainder, " -> collision in layer ", layer);
+        problemPairs ~= ProblemPair(divisor, remainder);
+    }
+
+    uint delay;
+    while(problemPairs.any!(p => delay%p.divisor == p.remainder)){
+        ++delay;
+    }
+
+    return delay;
 }
 
 //============================================================================
 // Unittests
 //============================================================================
 unittest{
-    auto contents = r"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5";
-    auto equivs = contents.parse;
-    expect(6, equivs.progsInGroupOf(0));
-}
-
-unittest{
-    auto contents = r"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5";
-    auto equivs = contents.parse;
-    expect(2, equivs.countGroups);
+    auto contents = r"0: 3
+1: 2
+3: 5
+4: 4
+6: 4";
+    auto input = contents.parse;
+    auto init = new State(input);
+    expect(24, init.tripSeverity);
+    expect(10, input.idealDelay);
+    expect(input.idealDelay2);
 }
