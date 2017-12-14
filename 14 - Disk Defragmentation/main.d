@@ -10,9 +10,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.strip;
         auto res1 = input.bitsInGrid;
-        //auto res2 = input.idealDelay;
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.regionCount;
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -23,8 +22,6 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
     if(!(expected == actual))
         throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
 }
-
-
 
 //============================================================================
 // Puzzle 1
@@ -42,10 +39,69 @@ static uint bitsInGrid(in string key){
 }
 
 //============================================================================
+// Puzzle 2
+//============================================================================
+import std.bitmanip: BitArray;
+import std.range: chunks, retro;
+import std.array: join, appender;
+import std.container: redBlackTree;
+import std.typecons: Tuple;
+
+static const EMPTY = -1;
+static const UNVISITED = 0;
+
+static void printGrid(int[128][128] grid) {
+    auto strBldr = appender!string;
+    foreach(y; 0..grid.length){
+        foreach(x; 0..grid.length)
+            strBldr.put(grid[y][x] == EMPTY ? "." : (cast(char)(grid[y][x]%94+33)).to!string);
+        strBldr.put("\n");
+    }
+    writeln(strBldr.data);
+}
+
+alias Vec2D = Tuple!(int,"x",int,"y");
+static void fillRegion(in Vec2D from, in uint regionNum, ref int[128][128] grid){
+     auto worklist = redBlackTree([from]);
+     while(!worklist.empty){
+        auto curPos = worklist.front;
+        grid[curPos.y][curPos.x] = regionNum;
+        worklist.removeFront;
+
+        // Determine neighbours & add unvisited ones
+        auto neighbours = [Vec2D(curPos.x,curPos.y-1), Vec2D(curPos.x+1,curPos.y), Vec2D(curPos.x,curPos.y+1), Vec2D(curPos.x-1,curPos.y)];
+        foreach(n; neighbours){
+            if(n.x>=0 && n.x<128 && n.y>=0 && n.y<128 && grid[n.y][n.x] == UNVISITED && n !in worklist)
+                worklist.insert(n);
+        }
+     }
+}
+
+static uint regionCount(in string key){
+    // Initialise grid
+    int[128][128] grid = EMPTY; // -1 = empty, 0 = not categorized yet, 1.. = region
+    foreach(y; 0..128){
+        auto hash = knotHash(key ~ "-" ~ y.to!string);
+        auto bits = BitArray(hash, 8*hash.length).array.chunks(8).map!retro.join;
+        foreach(x; 0..128)
+            if(bits[x]) grid[y][x] = UNVISITED;
+    }
+    
+    // Fill regions
+    ushort lastRegionNum = 0;
+    foreach(y; 0..128)
+        foreach(x; 0..128)
+            if(grid[y][x] == UNVISITED)
+                fillRegion(Vec2D(x, y), ++lastRegionNum, grid);
+    return lastRegionNum;
+}
+
+//============================================================================
 // Unittests
 //============================================================================
 unittest{
     expect(8108, bitsInGrid("flqrgnkx"));
+    expect(1242, regionCount("flqrgnkx"));
 }
 
 //============================================================================
