@@ -10,9 +10,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.dance;
-        //auto res2 = 5_000_000.countMatches!("a%4==0", "a%8==0")(input[0], input[1]);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.dance(1_000_000_000);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -84,10 +83,25 @@ static Move[] parse(in string contents){
     return res;
 }
 
-static char[] dance(in Move[] moves, in char[] state = iota('a','q').array){
-    auto s = state.dup;
+static char[] dance(in Move[] moves, in char[] initState = iota('a','q').array){
+    auto s = initState.dup;
     foreach(m; moves)
         m.apply(s);
+    return s;
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+static char[] dance(in Move[] moves, in uint times, in char[] initState = iota('a','q').array){
+    auto s = initState.dup;
+
+    for(uint i = 0; i<times; ++i){
+        s = moves.dance(s);
+        // Fast-forward if cycling at some point
+        if(s == initState)
+            i = (times - times%(i+1)) - 1;
+    }
     return s;
 }
 
