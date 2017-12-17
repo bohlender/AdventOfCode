@@ -10,10 +10,9 @@ void main(string[] args) {
     }else{
         const contents = readText(args[1]);
         auto input = contents.to!uint;
-        auto res1 = State([0],0).valAfter(2017, input);
-        //auto res2 = input.dance(1_000_000_000);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res1 = input.valAfter(2017);
+        auto res2 = input.valAfter0(50_000_000);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -36,8 +35,8 @@ struct State{
     size_t pos;
 }
 
-static State step(State init, in uint iterations, in uint stepSize){
-    auto s = init;
+static State step(in uint stepSize, in uint iterations){
+    auto s = State([0],0);
     foreach(i; 0..iterations){
         const dstPos = (s.pos+stepSize) % s.buf.length;
         s.buf = s.buf[0..dstPos+1] ~ (i+1) ~ s.buf[dstPos+1..$];
@@ -47,16 +46,29 @@ static State step(State init, in uint iterations, in uint stepSize){
     return s;
 }
 
-static uint valAfter(State init, in uint iterations, in uint stepSize){
-    auto s = init.step(iterations, stepSize);
+static uint valAfter(in uint stepSize, in uint iterations){
+    auto s = stepSize.step(iterations);
     auto nextPos = (s.pos+1) % s.buf.length;
     return s.buf[nextPos];
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+static uint valAfter0(in uint stepSize, in uint iterations){
+    uint pos = 0;
+    uint valAt0 = 0;
+    foreach(i; 0..iterations){
+        pos = (pos+stepSize) % (i+1) + 1;
+        if(pos == 1)
+            valAt0 = i+1;
+    }
+    return valAt0;
 }
 
 //============================================================================
 // Unittests
 //============================================================================
 unittest{
-    auto init = State([0],0);
-    expect(638, init.valAfter(2017, 3));
+    expect(638, 3.valAfter(2017));
 }
