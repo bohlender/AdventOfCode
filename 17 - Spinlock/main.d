@@ -29,19 +29,13 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
 //============================================================================
 import std.typecons: Tuple;
 
-//alias State = Tuple!(uint[], "buf", uint, "pos");
-struct State{
-    uint[] buf;
-    size_t pos;
-}
+alias State = Tuple!(uint[], "buf", size_t, "pos");
 
 static State step(in uint stepSize, in uint iterations){
     auto s = State([0],0);
     foreach(i; 0..iterations){
-        const dstPos = (s.pos+stepSize) % s.buf.length;
-        s.buf = s.buf[0..dstPos+1] ~ (i+1) ~ s.buf[dstPos+1..$];
-        assert(dstPos+1<s.buf.length);
-        s.pos = dstPos+1;
+        s.pos = (s.pos+stepSize) % s.buf.length + 1;
+        s.buf = s.buf[0..s.pos] ~ (i+1) ~ s.buf[s.pos..$];
     }
     return s;
 }
