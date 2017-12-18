@@ -8,10 +8,8 @@ void main(string[] args) {
     }else{
         const contents = readText(args[1]);
         auto input = contents.parse;
-        auto res1 = input.firstRcvVal;
-        //auto res2 = input.valAfter0(50_000_000);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res = input.firstRcvVal;
+        writeln(res);
     }
 }
 
