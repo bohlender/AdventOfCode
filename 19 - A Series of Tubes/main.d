@@ -11,7 +11,8 @@ void main(string[] args) {
         auto input = contents.splitLines;
         auto entryPos = input.findEntry;
         auto res1 = entryPos.lettersOnPath(input);
-        writeln(res1);
+        auto res2 = entryPos.numSteps(input);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -76,7 +77,7 @@ Vec2D findEntry(in string[] lines) pure {
     assert(false);
 }
 
-string lettersOnPath(in Vec2D entry, in string[] lines){
+auto lettersOnPath(in Vec2D entry, in string[] lines){
     auto s = State(entry, Dir.DOWN);
     string res;
 
@@ -87,6 +88,20 @@ string lettersOnPath(in Vec2D entry, in string[] lines){
         s = s.step(lines);    
     }
 
+    return res;
+}
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+auto numSteps(in Vec2D entry, in string[] lines){
+    auto s = State(entry, Dir.DOWN);
+    uint res;
+
+    while(s.pos.isOnPath(lines)){
+        s = s.step(lines);
+        ++res;
+    }
     return res;
 }
 
@@ -105,4 +120,6 @@ unittest{
     auto entry = input.findEntry;
     expect(Vec2D(5,0), entry);
     expect("ABCDEF", entry.lettersOnPath(input));
+
+    expect(38, entry.numSteps(input));
 }
