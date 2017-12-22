@@ -9,9 +9,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.numInfections(10_000);
-        //auto res2 = input.pixelsAfter(18);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.numInfections(10_000_000, false);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -24,14 +23,19 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
 }
 
 //============================================================================
-// Puzzle 1
+// Puzzle 1/2
 //============================================================================
 import std.string: strip, splitLines;
+
+enum Status {Clean, Weakened, Infected, Flagged}
 
 struct Vec2D{
     int x, y;
     Vec2D opBinary(string op)(Vec2D rhs) if(op=="+") {
         return Vec2D(x+rhs.x, y+rhs.y);
+    }
+    Vec2D opUnary(string op)() if(op=="-"){
+        return Vec2D(-x,-y);
     }
     void rotR(){
         auto oldX = x;
@@ -56,19 +60,42 @@ class State{
     override string toString() const{
         return format!"Pos: %s, Dir: %s\n%s"(pos, _dir, _infected);
     }
-    void infect(in Vec2D pos) {_infected[pos]=true;}
+    void infect(in Vec2D pos) {_infected[pos]=Status.Infected;}
     void clean(in Vec2D pos) {_infected.remove(pos);}
-    bool isInfected(in Vec2D pos) const @property {return _infected.get(pos,false);}
+    Status getStatus(in Vec2D pos) const @property {return _infected.get(pos,Status.Clean);}
+    bool isInfected(in Vec2D pos) const @property {return getStatus(pos) == Status.Infected;}
 
-    bool burst(){
+    bool burst(in bool puzzle1){
         bool didInfect = false;
-        if(isInfected(pos)){
-            _dir.rotR;
-            clean(pos);
+        auto status = getStatus(pos);
+        if(puzzle1){
+            if(status == Status.Infected){
+                _dir.rotR;
+                clean(pos);
+            }else{
+                _dir.rotL;
+                infect(pos);
+                didInfect = true;
+            }
         }else{
-            _dir.rotL;
-            infect(pos);
-            didInfect = true;
+            final switch(status){
+                case Status.Clean:
+                    _dir.rotL;
+                    _infected[pos] = Status.Weakened;
+                    break;
+                case Status.Weakened:
+                    infect(pos);
+                    didInfect = true;
+                    break;
+                case Status.Infected:
+                    _infected[pos] = Status.Flagged;
+                    _dir.rotR;
+                    break;
+                case Status.Flagged:
+                    clean(pos);
+                    _dir = -_dir;
+                    break;
+            }
         }
         _pos = _pos + _dir;
         return didInfect;
@@ -76,7 +103,7 @@ class State{
 private:
     Vec2D _pos;
     Vec2D _dir;
-    bool[Vec2D] _infected;
+    Status[Vec2D] _infected;
 }
 
 State parse(in string s){
@@ -93,11 +120,11 @@ State parse(in string s){
     return initState;
 }
 
-auto numInfections(in State initState, size_t bursts){
+auto numInfections(in State initState, size_t bursts, bool puzzle1=true){
     auto s = new State(initState);
     size_t res;
     foreach(_; 0..bursts)
-        if(s.burst)
+        if(s.burst(puzzle1))
             ++res;
     return res;
 }
@@ -123,4 +150,7 @@ unittest{
     expect(5, input.numInfections(7));
     expect(41, input.numInfections(70));
     expect(5587, input.numInfections(10_000));
+
+    expect(26, input.numInfections(100, false));
+    expect(2511944, input.numInfections(10_000_000, false));
 }
