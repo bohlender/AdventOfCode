@@ -9,9 +9,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.pixelsAfter(5);
-        //auto res2 = entryPos.numSteps(input);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.pixelsAfter(18);
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
