@@ -9,9 +9,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.mulCount;
-        //auto res2 = input.numInfections(10_000_000, false);
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.valOfH;
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -37,7 +36,7 @@ class Context{
         return s.isNumeric ? s.to!long : mem.get(s,0);
     }
     override string toString() const {
-        return format("PC: %d\nMem: %s", pc, mem);
+        return format("PC: %d, Mem: %s", pc, mem);
     }
 }
 
@@ -113,9 +112,37 @@ auto mulCount(in Instruction[] prog){
 }
 
 //============================================================================
-// Unittests
+// Puzzle 2
 //============================================================================
+auto valOfH(in Instruction[] prog){
+    long a=1,b,c,d,e,f,g,h;
 
-unittest{
+    b = 79;
+    c = b;
+    if(a != 0){
+        b = b*100 + 100_000;
+        c = b + 17_000;
+    }
+    
+    loc8:
+    f = 1;
+    d = 2;
+    
+    for(d=2; d != b; ++d){
+        e = b;
+        if(b%d == 0){
+            f = 0;
+            break;
+        }
+    }
+    d = b;
 
+    if(f == 0)
+        h += 1;
+    
+    if(b != c){
+        b += 17;
+        goto loc8;
+    }
+    return h;
 }
