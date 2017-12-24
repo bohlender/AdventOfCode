@@ -9,9 +9,8 @@ void main(string[] args) {
         const contents = readText(args[1]);
         auto input = contents.parse;
         auto res1 = input.maxStrength;
-        //auto res2 = input.valOfH;
-        //writefln("First: %s\nSecond: %s", res1, res2);
-        writeln(res1);
+        auto res2 = input.maxLengthAndStrength.str;
+        writefln("First: %s\nSecond: %s", res1, res2);
     }
 }
 
@@ -42,16 +41,32 @@ auto parse(in string s){
     return res;
 }
 
-auto maxStrength(R)(const R edges, int from=0, int curStrength=0){
+int maxStrength(R)(in R edges, in int from=0, in int curStrength=0){
+    int curMax = curStrength;
     auto outgoing = edges.filter!(e => e.v1==from || e.v2==from);
-    if(outgoing.empty)
-        return curStrength;
-    int curMax;
     foreach(o; outgoing){
         auto vDst = o.v1==from ? o.v2 : o.v1;
         auto newEdges = edges.dup.remove!(e => e==o);
         auto strength = newEdges.maxStrength(vDst, curStrength + o.w);
         curMax = max(curMax, strength);
+    }
+    return curMax;
+}
+
+
+//============================================================================
+// Puzzle 2
+//============================================================================
+alias Pair = Tuple!(int, "len", int, "str");
+Pair maxLengthAndStrength(R)(in R edges, in int from=0, in Pair curLenStr = Pair(0,0)){
+    Pair curMax = curLenStr;
+    auto outgoing = edges.filter!(e => e.v1==from || e.v2==from);
+    foreach(o; outgoing){
+        auto vDst = o.v1==from ? o.v2 : o.v1;
+        auto newEdges = edges.dup.remove!(e => e==o);
+        auto pair = newEdges.maxLengthAndStrength(vDst, Pair(curLenStr.len+1, curLenStr.str+ o.w));
+        if(pair.len>=curMax.len && pair.str >= curMax.str)
+            curMax = pair;
     }
     return curMax;
 }
@@ -70,4 +85,6 @@ unittest{
 9/10";
     auto input = contents.parse;
     expect(31, input.maxStrength);
+
+    expect(19, input.maxLengthAndStrength.str);
 }
