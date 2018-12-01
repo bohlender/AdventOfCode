@@ -14,14 +14,6 @@ void main(string[] args) {
     }
 }
 
-static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in size_t line = __LINE__) if(is(typeof(expected == actual) == bool)) {
-    import std.format: format;
-    import core.exception: AssertError;
-
-    if(!(expected == actual))
-        throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
-}
-
 //============================================================================
 // Puzzle 1
 //============================================================================
@@ -72,4 +64,12 @@ unittest{
 unittest{
     auto input = [+3, +3, +4, -2, -4];
     expect(10, input.firstDupeFreq);
+}
+
+static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in size_t line = __LINE__) if(is(typeof(expected == actual) == bool)) {
+    import std.format: format;
+    import core.exception: AssertError;
+
+    if(!(expected == actual))
+        throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
 }
