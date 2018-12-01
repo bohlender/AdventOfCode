@@ -34,10 +34,7 @@ auto freq(int[] input){
 }
 
 auto parse(in string s){
-    int[] res;
-    foreach(line; s.splitLines)
-        res ~=line.to!int;
-    return res;
+    return s.splitLines.map!(line => line.to!int).array;
 }
 
 //============================================================================
@@ -47,19 +44,16 @@ import std.range;
 import std.container;
 
 auto firstDupeFreq(int[] input){
-    auto freqs = cycle(input);
-    auto freqSums = make!(RedBlackTree!int)(0);
-
     int curFreq;
-    foreach(freq; freqs){
+    auto freqSums = make!(RedBlackTree!int)(curFreq);
+    
+    foreach(freq; cycle(input)){
         curFreq += freq;
         if (curFreq !in freqSums)
             freqSums.insert(curFreq);
         else
-            break;
+            return curFreq;
     }
-
-    return curFreq;
 }
 
 //============================================================================
