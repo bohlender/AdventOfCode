@@ -27,7 +27,9 @@ alias interval = Tuple!(int, "from", int, "till");
 alias NapMap = interval[][int];
 
 auto bestNapper(in NapMap id2naps){
-    return id2naps.keys.maxElement!(id => id2naps[id].map!(i => i.till-i.from).sum);
+    return id2naps.byKeyValue                                             // each (id, naps)
+                  .maxElement!(e => e.value.map!(i => i.till-i.from).sum) // pick (id, naps) with max nap time
+                  .key;                                                   // pick id
 }
 
 // Returns most often occurring minute and count
@@ -66,10 +68,8 @@ auto parse(in string s){
 import std.container;
 
 auto sol2(in NapMap id2naps){
-    Tuple!(int,int)[int] id2bestMinute;
-    id2naps.each!((id, naps) => id2bestMinute[id] = naps.bestMinute);
-
-    auto bestPair = id2bestMinute.byKeyValue.maxElement!(e => e.value[1]);
+    const id2bestMinute = id2naps.byKeyValue.map!(e => tuple(e.key, e.value.bestMinute)).assocArray;
+    const bestPair = id2bestMinute.byKeyValue.maxElement!(e => e.value[1]);
     return bestPair.key*bestPair.value[0];
 }
 
