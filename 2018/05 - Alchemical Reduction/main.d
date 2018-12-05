@@ -33,7 +33,6 @@ string react(S)(in S polymer){
 // Puzzle 2
 //============================================================================
 import std.ascii: abc = lowercase;
-import std.array;
 
 string bestReact(in string polymer){
     return abc.map!(c => polymer.filter!(z => z!=c && z!=c.toUpper).to!string.react)
