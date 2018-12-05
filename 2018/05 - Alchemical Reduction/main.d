@@ -20,11 +20,11 @@ void main(string[] args) {
 import std.algorithm;
 import std.conv;
 
-string react(S)(in S polymer){
-    string step(in S acc, in dchar cur){
+string react(in string polymer){
+    string step(in string acc, in dchar cur){
         if(!acc.empty && acc[$-1] != cur && acc[$-1].toUpper == cur.toUpper)
             return acc[0..$-1];
-        return acc ~ cur.to!S;
+        return acc ~ cur.to!string;
     }
     return polymer.fold!step("");
 }
