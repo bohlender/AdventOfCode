@@ -37,6 +37,7 @@ auto maxFiniteArea(in Vec2[] input){
     foreach(y; 0..height){
         foreach(x; 0..width){
             const cur = Vec2(x,y);
+            // TODO: Use topN
             const minIndex = input.minIndex!((v1, v2) => cur.manhattanDist(v1) < cur.manhattanDist(v2));
             const minDist = cur.manhattanDist(input[minIndex]);
             if (!input[minIndex+1..$].canFind!(v => cur.manhattanDist(v) == minDist)){
@@ -70,6 +71,8 @@ auto parse(in string s){
 //============================================================================
 // Puzzle 2
 //============================================================================
+// TODO: Implement more scalable approach, e.g.
+//       determine mean pos and flood fill from there
 auto areaSumDistBelow(in Vec2[] input, in int bound){
     auto width = input.map!(v => v.x).maxElement+1;
     auto height = input.map!(v => v.y).maxElement+1;
