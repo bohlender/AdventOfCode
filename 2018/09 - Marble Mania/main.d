@@ -38,13 +38,12 @@ auto winnerScore(in Input input){
             score[(nextMarble-1)%$] += marbles.front + nextMarble;
             marbles.removeFront;
         }
-        // "(%d) marbles: %s".writefln(nextMarble, marbles[]);
     }
     return score.maxElement;
 }
 
 auto rot(T)(DList!T list, in int by){
-    auto toRight = by>=0;
+    const toRight = by>=0;
     foreach(rem; 0..abs(by)){
         if(toRight){
             list.insertBack(list.moveFront);
