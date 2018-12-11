@@ -32,24 +32,19 @@ auto powerLevel(in int serial, in int x, in int y) {
 
 auto totalPower(in int serial, in int x, in int y, in int size=3){
     int sum;
-    foreach(curY; y..y+size){
-        foreach(curX; x..x+size){
+    foreach(curY; y..y+size)
+        foreach(curX; x..x+size)
             sum += serial.powerLevel(curX, curY);
-        }
-    }
     return sum;
 }
 
 auto bestCell(in int serial, in int size=3){
-    auto best = Cell(0,0,0,size);
+    Cell best;
     foreach(y; 0..300-size){
         foreach(x; 0..300-size){
             auto power = serial.totalPower(x+1, y+1, size);
-            if(power > best.totalPower){
-                best.totalPower = power;
-                best.x = x+1;
-                best.y = y+1;
-            }
+            if(power > best.totalPower)
+                best = Cell(x+1, y+1, power, size);
         }
     }
     return best;
@@ -58,17 +53,9 @@ auto bestCell(in int serial, in int size=3){
 //============================================================================
 // Puzzle 2
 //============================================================================
-import std.typecons;
-
-auto bestCellAndSize(in int serial){
-    Cell best;
-    foreach(size; 0..20){
-        auto cell = serial.bestCell(size);
-        if(cell.totalPower > best.totalPower){
-            best = cell;
-        }
-    }
-    return best;
+auto bestCellAndSize(in int serial, int maxSize=20){
+    return iota(maxSize).map!(size => serial.bestCell(size))
+                        .maxElement!(cell => cell.totalPower);
 }
 
 //============================================================================
