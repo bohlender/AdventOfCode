@@ -99,17 +99,6 @@ auto firstCrash(in State input){
     return tuple(crashed.front.x, crashed.front.y);
 }
 
-auto cell2char(in Cell c){
-    if(c == Cell(Dir.N | Dir.S)) return '|';
-    if(c == Cell(Dir.E | Dir.W)) return '-';
-    if(c == Cell(Dir.W | Dir.N)) return '/';
-    if(c == Cell(Dir.E | Dir.S)) return '/';
-    if(c == Cell(Dir.S | Dir.W)) return '\\';
-    if(c == Cell(Dir.N | Dir.E)) return '\\';
-    if(c == Cell(Dir.N | Dir.E | Dir.S | Dir.W)) return '+';
-    return ' ';
-}
-
 auto char2cell(in char c, in bool hasWest=false){
     switch(c){
         case '|','v','^': return Cell(Dir.N | Dir.S);
@@ -148,13 +137,8 @@ auto parse(in string s){
 //============================================================================
 auto lastCart(in State input){
     auto cur = State(input.carts.dup, input.width, input.height, input.cells);
-    Cart[] crashed;
-    while(cur.carts.length != 1){
-        crashed = cur.step;
-        if(!crashed.empty)
-            foreach(cart; crashed)
-                cur.carts = cur.carts.remove!(c => c==cart);
-    }
+    while(cur.carts.length != 1)
+        cur.step;
     return tuple(cur.carts.front.x, cur.carts.front.y);
 }
 
