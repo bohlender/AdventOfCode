@@ -18,16 +18,17 @@ void main(string[] args) {
 }
 
 auto parse(in string s) {
-    return s.splitLines().map!(l => l.to!int).array().sort();
+    return s.splitLines().map!(l => l.to!int);
 }
 
 //============================================================================
 // Puzzle 1
 //============================================================================
 auto sol1(Range)(Range input) {
-    foreach(i; input) {
+    auto sorted = input.array.sort();
+    foreach(i; sorted) {
         auto j = 2020-i;
-        if(input.contains(j))
+        if(sorted.contains(j))
             return i*j;
     }
     assert(0);
@@ -37,10 +38,11 @@ auto sol1(Range)(Range input) {
 // Puzzle 2
 //============================================================================
 auto sol2(Range)(Range input) {
-    foreach(i; input) {
-        foreach(j; input) {
+    auto sorted = input.array.sort();
+    foreach(i; sorted) {
+        foreach(j; sorted) {
             auto k = 2020-i-j;
-            if(input.contains(k))
+            if(sorted.contains(k))
                 return i*j*k;
         }
     }
