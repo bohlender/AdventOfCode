@@ -1,11 +1,8 @@
 import std.file: readText;
-import std.conv;
 import std.stdio;
-import std.format;
 import std.string;
 import std.algorithm;
 import std.range;
-import std.bitmanip;
 
 void main(string[] args) {
     if(args.length != 2){
