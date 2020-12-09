@@ -12,7 +12,7 @@ void main(string[] args) {
         auto input = args[1].readText.parse;
         auto res1 = input.sol1(25);
         auto res2 = input.sol2(25);
-        writefln("First: %s\nSecond: %s", res1, res2);
+        writefln!"First: %s\nSecond: %s"(res1, res2);
     }
 }
 
@@ -92,5 +92,5 @@ static void expect(T1, T2)(T1 expected, T2 actual, in string file = __FILE__, in
     import core.exception: AssertError;
 
     if(!(expected == actual))
-        throw new AssertError(format("Expected %s but got %s", expected, actual), file, line);
+        throw new AssertError(format!"Expected %s but got %s"(expected, actual), file, line);
 }
