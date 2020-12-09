@@ -43,21 +43,18 @@ auto sol1(Range)(Range input, uint preamble) {
 //==============================================================================
 auto sol2(Range)(Range input, uint preamble) {
     auto badNum = input.sol1(preamble);
-    ulong ubIdx, acc;
-    foreach(lbIdx; input.length.iota) {
-        while(acc < badNum) {
+    ulong lbIdx, ubIdx, acc;
+    while(acc != badNum) {
+        if(acc < badNum) {
             acc += input[ubIdx];
             ubIdx++;
+        }else{
+            acc -= input[lbIdx];
+            lbIdx++;
         }
-
-        auto slice = input[lbIdx..ubIdx];
-        if(slice.sum == badNum) {
-            auto minMax = slice.fold!(min, max);
-            return minMax[0]+minMax[1];
-        }
-        acc -= input[lbIdx];
     }
-    assert(0);
+    auto minMax = input[lbIdx..ubIdx].fold!(min, max);
+    return minMax[0]+minMax[1];
 }
 
 //==============================================================================
