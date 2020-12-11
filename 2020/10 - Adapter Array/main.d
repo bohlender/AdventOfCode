@@ -53,7 +53,7 @@ auto sol2(T)(T[] input) {
         return cache[fromIdx] = res;
     }
 
-    return arrangementsFrom(input.front);
+    return arrangementsFrom(0);
 }
 
 //==============================================================================
