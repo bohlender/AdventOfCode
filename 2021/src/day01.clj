@@ -1,17 +1,10 @@
-#!/bin/sh
-#_(
-exec clojure -M "$0" "input.txt"
-)
-
-; ===================
-; Clojure starts here
-; ===================
-(use 'clojure.test)
+(ns day01
+  (:use clojure.test))
 
 (defn parse [s]
   (->> s
        clojure.string/split-lines
-       (map #(Integer. %))))
+       (map #(Integer/parseInt %))))
 
 (defn parse-file [filename]
   (parse (slurp filename)))
@@ -38,16 +31,17 @@ exec clojure -M "$0" "input.txt"
   (->> coll
        (partition 3 1)
        (map sum)
-       sol1))
+       count-incr))
 
 (is (= 5 (sol2 [199 200 208 210 200 207 240 269 260 263])))
 
 ; ===================
 ; Main
 ; ===================
-(if (not= 1 (count *command-line-args*))
-  (println "Invalid number of parameters. Expecting one input file.")
-  (let [[filename] *command-line-args*
-        input (parse-file filename)]
-    (println "First:" (sol1 input))
-    (println "Second:" (sol2 input))))
+(defn -main [& args]
+   (if (not= 1 (count args))
+     (println "Invalid number of parameters. Expecting one input file.")
+     (let [[filename] args
+           input (parse-file filename)]
+       (println "First:" (sol1 input))
+       (println "Second:" (sol2 input)))))
