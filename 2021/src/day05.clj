@@ -45,7 +45,6 @@
 ; ===================
 ; Part 2
 ; ===================
-
 (defn sol2 [lines]
   (let [coords (flatten (map get-coords lines))
         freqs (frequencies coords)]
