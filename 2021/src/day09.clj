@@ -99,5 +99,5 @@
     (println "Invalid number of parameters. Expecting one input file.")
     (let [[filename] args
           input (parse-file filename)]
-      (println "First:" (time (sol1 input)))
+      (println "First:" (sol1 input))
       (println "Second:" (sol2 input)))))
