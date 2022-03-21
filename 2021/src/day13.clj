@@ -25,40 +25,36 @@
 ; ===================
 ; Part 1
 ; ===================
-(defn paper-dim [paper axis]
-  (->> (:dots paper)
+(defn dots-dim [dots axis]
+  (->> dots
        (map axis)
        (apply max)
        inc))
 
 (defn plot [p]
-  (let [w (paper-dim p :x)
-        h (paper-dim p :y)]
+  (let [w (dots-dim (:dots p) :x)
+        h (dots-dim (:dots p) :y)]
     (doseq [y (range h)]
       (->> (mapv (comp #(if % "#" ".")
                        #(contains? (:dots p) (->Dot % y)))
                  (range w))
            println))))
 
-(defn dot-mirror [dot {axis :axis, pos :pos, :as instr}]
-  (update dot
-          (:axis instr)
-          #(- pos (- % pos))))
+(defn dot-mirror [dot {axis :axis, pos :pos}]
+  (update dot axis #(- pos (- % pos))))
 
-; TODO: Operate on dots
-(defn paper-fold [paper {axis :axis, pos :pos, :as instr}]
-  (->> (:dots paper)
+(defn dots-fold [dots {axis :axis, pos :pos, :as instr}]
+  (->> dots
        ; mirror if above pos on axis; otherwise keep
        (mapv #(if (> (axis %) pos)
                 (dot-mirror % instr)
                 %))
-       set
-       (assoc paper :dots)))
+       set))
 
-; TODO: Combine dots & instrs
 (defn step [paper]
   (if-let [instr (first (:instrs paper))]
-    (-> (paper-fold paper instr)
+    (-> paper
+        (update :dots #(dots-fold % instr))
         (update :instrs rest))))
 
 (defn sol1 [paper]
@@ -78,9 +74,6 @@
     (->> (last (take-while (complement nil?) it))
          plot)))
 
-(deftest part2-examples
-  nil)
-
 ; ===================
 ; Main
 ; ===================
@@ -90,4 +83,5 @@
     (let [[filename] args
           input (parse-file filename)]
       (println "First:" (sol1 input))
-      (println "Second:" (sol2 input)))))
+      (println "Second:")
+      (sol2 input))))
