@@ -1,6 +1,7 @@
 (ns day15
   (:require [clojure.string :as string]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clojure.data.priority-map :refer [priority-map]]))
 
 (defn parse-line [line]
   "Parses digit characters as a vector of integers."
@@ -39,17 +40,18 @@
 
 ; TODO: What if target is unreachable?
 (defn min-risk [risk-map from to]
-  (loop [worklist (sorted-set-by second-< [from 0])         ; [elem risk] pairs
+  (loop [worklist (priority-map from 0)        ; [elem risk] pairs
          visited #{}]
-    (let [[cur cur-risk] (first worklist)]
+    (let [[cur cur-risk] (peek worklist)]
       (if (= cur to)
         cur-risk
-        (let [worklist (disj worklist [cur cur-risk])
+        (let [worklist (pop worklist)
               visited (conj visited cur)
-              ns (remove visited (neighbours risk-map cur))
-              next-worklist (reduce (fn [res yx] (conj res [yx (+ cur-risk (get-in risk-map yx))]))
-                                    worklist
-                                    ns)]
+              next-worklist (->> cur
+                                 (neighbours risk-map)
+                                 (remove visited)
+                                 (reduce (fn [res yx] (conj res [yx (+ cur-risk (get-in risk-map yx))]))
+                                         worklist))]
           (recur next-worklist visited))))))
 
 (defn sol1 [input]
@@ -95,5 +97,3 @@
           input (parse-file filename)]
       (println "First:" (sol1 input))
       (println "Second:" (sol2 input)))))
-
-(-main "inputs/day15.txt")
