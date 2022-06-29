@@ -34,10 +34,6 @@
           [(dec y) x]]
          (filter in-bounds?))))
 
-(defn second-< [lhs rhs]
-  "Comparator that sorts by the second element."
-  (compare [(second lhs) lhs] [(second rhs) rhs]))
-
 ; TODO: What if target is unreachable?
 (defn min-risk [risk-map from to]
   (loop [worklist (priority-map from 0)        ; [elem risk] pairs
