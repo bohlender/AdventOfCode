@@ -34,16 +34,6 @@
   (juxt (partial apply min)
         (partial apply max)))
 
-(defn print-pixels [lit-pixels]
-  (println "count:" (count lit-pixels))
-  (let [[min-x max-x] (min-max (map :x lit-pixels))
-        [min-y max-y] (min-max (map :y lit-pixels))]
-    (doseq [y (range min-y (inc max-y))]
-      (->> (range min-x (inc max-x))
-           (map (fn [x] (if (get lit-pixels {:x x :y y}) "#" ".")))
-           (apply str)
-           println))))
-
 (defn bits->int [bits]
   "Returns the (unsigned) integer value represented by a bit sequence."
   (->> bits
