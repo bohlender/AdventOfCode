@@ -77,8 +77,8 @@
   (loop [worklist steps
          on-cuboids []]
     (if-some [step (first worklist)]
-      (let [split-cuboids (reduce (fn [coll cuboid] (into coll (cuboid-minus cuboid (:cuboid step))))
-                                  []
+      (let [split-cuboids (transduce (map #(cuboid-minus % (:cuboid step)))
+                                  into
                                   on-cuboids)
             next-on-cuboids (if (:on? step)
                               (conj split-cuboids (:cuboid step))
