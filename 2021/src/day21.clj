@@ -70,18 +70,13 @@
 ; ==============================================================================
 ; Part 2
 ; ==============================================================================
-(defn histogram [coll]
-  (reduce (fn [m v] (update m v (fnil inc 0)))
-          {}
-          coll))
-
 (def roll-sum-histogram
   "The histogram of all possible 3-roll-sums when using a dirac die."
   (->> (for [x [1 2 3]
              y [1 2 3]
              z [1 2 3]]
          (+ x y z))
-       histogram))
+       frequencies))
 
 (def outcomes
   "Determines how many games each player can win starting from the given state. Returns a map."
