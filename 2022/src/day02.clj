@@ -23,13 +23,13 @@
 
 (def counter-shape {:scissors :rock, :rock :paper, :paper :scissors})
 
-(defn won? [[other me]]
-  (= (counter-shape other) me))
+(defn won? [[opponent-shape my-shape]]
+  (= (counter-shape opponent-shape) my-shape))
 
-(defn score [[other me :as choices]]
-  (let [shape-score ({:rock 1 :paper 2 :scissors 3} me)
+(defn score [[opponent-shape my-shape :as choices]]
+  (let [shape-score ({:rock 1 :paper 2 :scissors 3} my-shape)
         outcome-score (cond
-                        (= other me) 3
+                        (= opponent-shape my-shape) 3
                         (won? choices) 6
                         :else 0)]
     (+ outcome-score shape-score)))
@@ -51,11 +51,11 @@
    (get {:X :lose, :Y :draw, :Z :win} rhs)])
 
 (defn interpret [[opponent-shape todo]]
-  (let [reaction (case todo
+  (let [my-shape (case todo
                    :win (counter-shape opponent-shape)
                    :lose (get (set/map-invert counter-shape) opponent-shape)
                    opponent-shape)]
-    [opponent-shape reaction]))
+    [opponent-shape my-shape]))
 
 (defn sol2 [input]
   (->> input
