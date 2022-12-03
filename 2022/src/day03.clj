@@ -11,9 +11,6 @@
   (->> (string/split-lines s)
        (map parse-rucksack)))
 
-(defn parse-file [filename]
-  (->> filename slurp parse))
-
 ; ==============================================================================
 ; Part 1
 ; ==============================================================================
@@ -39,7 +36,7 @@
 ; ==============================================================================
 ; Part 2
 ; ==============================================================================
-(let [input (parse "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw")]
+(defn sol2 [input]
   (->> input
        (map #(apply concat %))
        (partition 3)
@@ -57,6 +54,6 @@
   (if (not= 1 (count args))
     (println "Invalid number of parameters. Expecting one input file.")
     (let [[filename] args
-          input (parse-file filename)]
+          input (parse (slurp filename))]
       (println "First:" (sol1 input))
       (println "Second:" (sol2 input)))))
