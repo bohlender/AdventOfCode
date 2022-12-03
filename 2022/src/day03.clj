@@ -21,8 +21,8 @@
 
 (defn priority [item]
   (if (Character/isLowerCase item)
-    (+ 1 (- (Character/getNumericValue item) (Character/getNumericValue \a)))
-    (+ 27 (- (Character/getNumericValue item) (Character/getNumericValue \A)))))
+    (+ 1 (- (int item) (int \a)))
+    (+ 27 (- (int item) (int \A)))))
 
 (defn sol1 [input]
   (->> input
