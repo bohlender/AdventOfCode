@@ -40,8 +40,7 @@
   (->> input
        (map #(apply concat %))
        (partition 3)
-       (map (comp priority common-item))
-       (reduce +)))
+       sol1))
 
 (deftest part2-examples
   (let [input (parse "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw")]
