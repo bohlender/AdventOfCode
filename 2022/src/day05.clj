@@ -20,7 +20,7 @@
        reverse                                              ; start with bottom
        (drop 1)                                             ; ignore index line
        (mapcat parse-stack-line)
-       (map (fn [[k v]] {k (list v)}))                      ; {1 :N} {2 :C} -> {1 '(:N)} {2 '(:C)}
+       (map (fn [[k v]] {k (list v)}))                      ; {1 \N} {2 \C} -> {1 '(\N)} {2 '(\C)}
        (apply merge-with into)))
 
 (defn parse-move [s]
