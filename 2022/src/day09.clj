@@ -2,10 +2,11 @@
   (:require [clojure.test :refer :all]
             [clojure.string :as string]))
 
+(defrecord Motion [dir dist])
+
 (defn parse-motion [line]
   (let [[dir dist] (string/split line #"\s")]
-    {:dir  (keyword dir)
-     :dist (Integer/parseInt dist)}))
+    (->Motion (keyword dir) (Integer/parseInt dist))))
 
 (defn parse [s]
   (->> (string/split-lines s)
@@ -14,8 +15,9 @@
 ; ==============================================================================
 ; Part 1
 ; ==============================================================================
-(defrecord Vec2d [x y])
-(def origin (->Vec2d 0 0))
+(def origin {:x 0 :y 0})
+(def vec-plus (partial merge-with +))
+(def vec-minus (partial merge-with -))
 
 (defn to-single-step-dirs [motion]
   "Turns a motion of distance N into a seq of motions of distance 1."
@@ -27,12 +29,6 @@
     :L {:x -1 :y 0}
     :U {:x 0 :y 1}
     :D {:x 0 :y -1}))
-
-(defn vec-plus [coord other]
-  (merge-with + coord other))
-
-(defn vec-minus [coord other]
-  (merge-with - coord other))
 
 (defn touching? [coord other]
   (->> (vec-minus coord other)
@@ -60,13 +56,13 @@
   (->> motions
        (mapcat to-single-step-dirs)
        (map dir->dir-vec)
-       (reduce (fn [{:keys [rope tail-coords]} dir-vec]
+       (reduce (fn [{:keys [rope last-coords]} dir-vec]
                  (let [next-rope (move-rope rope dir-vec)]
                    {:rope        next-rope
-                    :tail-coords (conj tail-coords (last next-rope))}))
+                    :last-coords (conj last-coords (last next-rope))}))
                {:rope        init-rope
-                :tail-coords #{}})
-       :tail-coords
+                :last-coords #{}})
+       :last-coords
        count))
 
 (defn sol1 [motions]
