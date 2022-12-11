@@ -28,11 +28,11 @@
     :U {:x 0 :y 1}
     :D {:x 0 :y -1}))
 
-(defn vec-plus [coord delta]
-  (merge-with + coord delta))
+(defn vec-plus [coord other]
+  (merge-with + coord other))
 
-(defn vec-minus [coord delta]
-  (merge-with - coord delta))
+(defn vec-minus [coord other]
+  (merge-with - coord other))
 
 (defn touching? [coord other]
   (->> (vec-minus coord other)
@@ -44,12 +44,12 @@
   "Returns the new coordinate of a knot depending on the previous (potentially the head) knot."
   (if (touching? prev-knot knot)
     knot
-    (let [delta (vec-minus prev-knot knot)
-          bounded-delta (update-vals delta #(-> % (min 1) (max -1)))]
-      (vec-plus knot bounded-delta))))
+    (let [dir-vec (vec-minus prev-knot knot)
+          bounded-dir-vec (update-vals dir-vec #(-> % (min 1) (max -1)))]
+      (vec-plus knot bounded-dir-vec))))
 
 (defn move-rope [rope dir-vec]
-  "Returns the knot coordinates resulting from moving the head knot by delta (incl. effect on tail knots)."
+  "Returns the knot coordinates resulting from moving the head knot by dir-vec (incl. effect on tail knots)."
   (let [new-head (vec-plus (first rope) dir-vec)]
     (->> (rest rope)
          (reduce (fn [new-rope knot] (conj new-rope (update-knot (last new-rope) knot)))
@@ -60,8 +60,8 @@
   (->> motions
        (mapcat to-single-step-dirs)
        (map dir->dir-vec)
-       (reduce (fn [{:keys [rope tail-coords]} delta]
-                 (let [next-rope (move-rope rope delta)]
+       (reduce (fn [{:keys [rope tail-coords]} dir-vec]
+                 (let [next-rope (move-rope rope dir-vec)]
                    {:rope        next-rope
                     :tail-coords (conj tail-coords (last next-rope))}))
                {:rope        init-rope
