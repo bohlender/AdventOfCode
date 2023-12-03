@@ -18,17 +18,23 @@
 
 (def num-or-symbol-re #"\d+|[^\d\.]")
 
-(defn parse [s]
-  (let [lines (string/split-lines s)]
-    (for [[y line] (enumerate lines)
-          [group x-from x-to] (re-pos num-or-symbol-re line)]
-      (->> (if (Character/isDigit ^char (first group))
-             {:type  :number
-              :value (Integer/parseInt group)}
-             {:type  :symbol
-              :value group})
-           (merge {:y y
-                   :x [x-from x-to]})))))
+(with-test
+  (defn parse [s]
+   (let [lines (string/split-lines s)]
+     (for [[y line] (enumerate lines)
+           [group x-from x-to] (re-pos num-or-symbol-re line)]
+       (->> (if (Character/isDigit ^char (first group))
+              {:type  :number
+               :value (Integer/parseInt group)}
+              {:type  :symbol
+               :value group})
+            (merge {:y y
+                    :x [x-from x-to]})))))
+
+  (is (= (parse "467..114..\n...*......")
+         ({:y 0, :x [0 3], :type :number, :value 467}
+          {:y 0, :x [5 8], :type :number, :value 114}
+          {:y 1, :x [3 4], :type :symbol, :value "*"}))))
 
 (defn parse-file [filename]
   (->> filename slurp parse))
