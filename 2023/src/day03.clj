@@ -20,21 +20,22 @@
 
 (with-test
   (defn parse [s]
-   (let [lines (string/split-lines s)]
-     (for [[y line] (enumerate lines)
-           [group x-from x-to] (re-pos num-or-symbol-re line)]
-       (->> (if (Character/isDigit ^char (first group))
-              {:type  :number
-               :value (Integer/parseInt group)}
-              {:type  :symbol
-               :value group})
-            (merge {:y y
-                    :x [x-from x-to]})))))
+    (let [lines (string/split-lines s)]
+      (->> (for [[y line] (enumerate lines)
+                 [group x-from x-to] (re-pos num-or-symbol-re line)]
+             (->> (if (Character/isDigit ^char (first group))
+                    {:type  :number
+                     :value (Integer/parseInt group)}
+                    {:type  :symbol
+                     :value group})
+                  (merge {:y y
+                          :x [x-from x-to]})))
+           vec)))
 
   (is (= (parse "467..114..\n...*......")
-         ({:y 0, :x [0 3], :type :number, :value 467}
+         [{:y 0, :x [0 3], :type :number, :value 467}
           {:y 0, :x [5 8], :type :number, :value 114}
-          {:y 1, :x [3 4], :type :symbol, :value "*"}))))
+          {:y 1, :x [3 4], :type :symbol, :value "*"}])))
 
 (defn parse-file [filename]
   (->> filename slurp parse))
@@ -42,12 +43,26 @@
 ; ==============================================================================
 ; Part 1
 ; ==============================================================================
-; TODO: O(n) --> O(log n) or O(1)
-(defn get-element [elements [x y]]
-  (->> elements
-       (filter (fn [e] (and (= (:y e) y)
-                            (<= (get-in e [:x 0]) x (dec (get-in e [:x 1]))))))
-       first))
+; Assumes sorted-elements to be first sorted by y, then by x
+(with-test
+  (defn get-element [sorted-elements [x y]]
+    (let [cmp-element-coord (fn [e [x y]] (let [c (compare (:y e) y)]
+                                            (if (zero? c)
+                                              (cond
+                                                (< x (get-in e [:x 0])) 1
+                                                (<= (get-in e [:x 1]) x) -1
+                                                :else 0)
+                                              c)))
+          idx (java.util.Collections/binarySearch sorted-elements [x y] cmp-element-coord)]
+      (when (nat-int? idx)
+        (get sorted-elements idx))))
+
+  (is (= (get-element [{:y 0, :x [0 3], :type :number, :value 467}
+                       {:y 0, :x [5 8], :type :number, :value 114}
+                       {:y 1, :x [3 4], :type :symbol, :value "*"}
+                       {:y 2, :x [2 4], :type :number, :value 35}
+                       {:y 2, :x [6 9], :type :number, :value 633}] [7 0])
+         {:y 0, :x [5 8], :type :number, :value 114})))
 
 (defn adjacent-coords [y x-from x-to]
   (for [cur-y (range (dec y) (+ y 2))
