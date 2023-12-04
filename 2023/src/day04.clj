@@ -83,4 +83,3 @@
       (println "First:" (sol1 input))
       (println "Second:" (sol2 input)))))
 
-(-main "inputs/day04.txt")
