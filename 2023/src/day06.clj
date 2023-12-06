@@ -1,6 +1,7 @@
 (ns day06
   (:require [clojure.test :refer :all]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.math :refer [sqrt pow ceil floor]]))
 
 (defn parse-numbers [s]
   (->> (re-seq #"\d+" s)
@@ -22,21 +23,21 @@
 ; ==============================================================================
 ; Part 1
 ; ==============================================================================
-(defn distance [time-limit hold-time]
-  (let [drive-time (- time-limit hold-time)
-        speed (* 1 hold-time)]
-    (* speed drive-time)))
+; x² + px + q = 0
+(defn solve-quardratic [p q]
+  (let [from (- (- (/ p 2)) (sqrt (- (pow (/ p 2) 2) q)))
+        to (+ (- (/ p 2)) (sqrt (- (pow (/ p 2) 2) q)))]
+    [from to]))
 
-(defn counter
-  ([acc _] (inc acc))
-  ([acc] acc)
-  ([] 0))
+(defn dbl-is-int? [d]
+  (= d (floor d)))
 
 (defn ways-to-win [[time-limit record-distance :as race]]
-  (->> (range 0 (inc time-limit))
-       (transduce (comp (map (partial distance time-limit))
-                        (filter #(> % record-distance)))
-                  counter)))
+  (let [[from-double to-double] (solve-quardratic (- time-limit) record-distance)
+        ; We actually need the next integer above `from` & below `to`
+        from (if (dbl-is-int? from-double) (inc from-double) (ceil from-double))
+        to (if (dbl-is-int? to-double) (dec to-double) (floor to-double))]
+    (->> (- to from) inc int)))
 
 (defn sol1 [input]
   (->> (map ways-to-win input)
