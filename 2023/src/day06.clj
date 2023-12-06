@@ -1,11 +1,11 @@
 (ns day06
   (:require [clojure.test :refer :all]
             [clojure.string :as string]
-            [clojure.math :refer [sqrt pow ceil floor]]))
+            [clojure.math :refer [sqrt pow ceil]]))
 
 (defn parse-numbers [s]
   (->> (re-seq #"\d+" s)
-       (mapv #(Long/parseLong %))))
+       (mapv parse-long)))
 
 (with-test
   (defn parse [s]
@@ -26,18 +26,15 @@
 ; x² + px + q = 0
 (defn solve-quardratic [p q]
   (let [from (- (- (/ p 2)) (sqrt (- (pow (/ p 2) 2) q)))
-        to (+ (- (/ p 2)) (sqrt (- (pow (/ p 2) 2) q)))]
+        to   (+ (- (/ p 2)) (sqrt (- (pow (/ p 2) 2) q)))]
     [from to]))
-
-(defn dbl-is-int? [d]
-  (= d (floor d)))
 
 (defn ways-to-win [[time-limit record-distance :as race]]
   (let [[from-double to-double] (solve-quardratic (- time-limit) record-distance)
         ; We actually need the next integer above `from` & below `to`
-        from (if (dbl-is-int? from-double) (inc from-double) (ceil from-double))
-        to (if (dbl-is-int? to-double) (dec to-double) (floor to-double))]
-    (->> (- to from) inc int)))
+        from (inc (int from-double))
+        to (dec (int (ceil to-double)))]
+    (inc (- to from))))
 
 (defn sol1 [input]
   (->> (map ways-to-win input)
@@ -52,7 +49,7 @@
 ; ==============================================================================
 (defn join-ints [ints]
   (->> (apply str ints)
-       Long/parseLong))
+       parse-long))
 
 (defn fix-kerning [input]
   (let [[times distances] (apply (partial map vector) input)]
