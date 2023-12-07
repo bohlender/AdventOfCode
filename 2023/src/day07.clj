@@ -85,21 +85,16 @@
 (def card-strength-with-joker
   (assoc card-strength :J 1))
 
-(def cards-without-joker
-  (remove #{:J} (keys card-strength)))
-
-(defn replace-jokers [hands]
-  (lazy-seq (when-first [hand hands]
-     (let [joker-idx (.indexOf hand :J)]
-       (if (neg? joker-idx)
-         (cons hand (replace-jokers (rest hands)))
-         (replace-jokers (concat (for [c cards-without-joker] (assoc hand joker-idx c))
-                                 (rest hands))))))))
+(defn use-joker [hand]
+  (let [freqs (dissoc (frequencies hand) :J)]
+    (if (empty? freqs)
+      hand
+      (let [most-freq-card (key (apply max-key val freqs))]
+        (replace {:J most-freq-card} hand)))))
 
 (defn hand-type-with-joker [hand]
-  (->> (replace-jokers [hand]) ; TODO: Determine best achievable hand type without brute force
-       (into #{} (map hand-type))
-       (apply (partial max-key type-strength))))
+  (->> (use-joker hand)
+       hand-type))
 
 (defn sol2 [input]
   (let [hands (mapv :hand input)
